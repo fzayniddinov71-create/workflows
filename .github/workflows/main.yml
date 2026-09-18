@@ -2,34 +2,11 @@ name: Guruhga kunlik xabar yuborish
 
 on:
   schedule:
-    # ═══════════════════════════════════════════════════════════════
-    # DIQQAT: GitHub cron vaqtni faqat UTC bo'yicha qabul qiladi.
-    # Toshkent vaqti UTC dan 5 soat oldinda (UTC+5).
-    # Shuning uchun Toshkent vaqtidan HAR DOIM 5 soat AYIRIB yozilgan.
-    #
-    # Cron formati: "daqiqa soat kun-raqami oy hafta-kuni"
-    # Hafta kunlari: 0=Yakshanba, 1=Dush, 2=Sesh, 3=Chor, 4=Pay, 5=Juma, 6=Shanba
-    # ═══════════════════════════════════════════════════════════════
-
-    - cron: '02 12 * * 1-5'
-      # Bu yerda: 30-daqiqa, 2-soat (UTC) => Toshkentda 07:30
-      # "1-5" => Dushanbadan Jumagacha
-      # → SALOMLASHISH xabari
-
-    - cron: '50 2 * * 1-5'
-      # 50-daqiqa, 2-soat (UTC) => Toshkentda 07:50 (soat 8 ga 10 daqiqa qolganda)
-      # "1-5" => Dushanbadan Jumagacha
-      # → "DARSGA KECHIKMANG" ogohlantirishi
-
-    - cron: '0 4 * * 0,6'
-      # 0-daqiqa, 4-soat (UTC) => Toshkentda 09:00
-      # "0,6" => Yakshanba va Shanba
-      # → DAM OLISH xabari
-
-    # Vaqtni o'zgartirmoqchi bo'lsangiz: kerakli Toshkent vaqtidan 5 soat
-    # ayirib, o'sha raqamni "soat" o'rniga yozing. Masalan, Toshkentda
-    # 08:15 kerak bo'lsa → UTC bo'yicha 03:15 → cron: '15 3 * * 1-5'
-  workflow_dispatch:          # Qo'lda ham ishga tushirish uchun (test qilish uchun)
+    # TEST UCHUN VAQTINCHA VAQTLAR (Toshkent bo'yicha, bugun uchun har kuni ishlaydi):
+    - cron: '20 12 * * *'   # Toshkent 17:20 => salomlashish
+    - cron: '22 12 * * *'   # Toshkent 17:22 => ogohlantirish
+    - cron: '24 12 * * *'   # Toshkent 17:24 => dam olish
+  workflow_dispatch:
     inputs:
       xabar_turi:
         description: "Test uchun xabar turi"
@@ -39,30 +16,47 @@ on:
         options:
           - salom
           - ogohlantirish
-          - dam_olish
+          - damolish
 
 jobs:
-  send-message:
+  salomlashish:
     runs-on: ubuntu-latest
+    if: github.event.schedule == '20 12 * * *' || github.event.inputs.xabar_turi == 'salom'
     steps:
-      - name: Xabar yuborish
-        env:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          SCHEDULE="${{ github.event.schedule }}"
-          MANUAL="${{ github.event.inputs.xabar_turi }}"
+        run: python scripts/send_message.py salom
 
-          if [ "$SCHEDULE" = "02 12 * * 1-5" ] || [ "$MANUAL" = "salom" ]; then
-            TEXT="Assalomu alaykum, yaxshimisizlar? 😊 Yangi kun, yangi kayfiyat bilan!"
-          elif [ "$SCHEDULE" = "50 2 * * 1-5" ] || [ "$MANUAL" = "ogohlantirish" ]; then
-            TEXT="Diqqat, guruh! 📢 Darsga kechikmasdan kelinglar, dars boshlanishiga oz vaqt qoldi ⏰"
-          elif [ "$SCHEDULE" = "0 4 * * 0,6" ] || [ "$MANUAL" = "dam_olish" ]; then
-            TEXT="Assalomu alaykum! 😊 Dam olish kuni yaxshi o'tyaptimi? Yaxshilab dam oling, kuch to'plang! 🌿"
-          else
-            TEXT="Assalomu alaykum!"
-          fi
+  ogohlantirish:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '22 12 * * *' || github.event.inputs.xabar_turi == 'ogohlantirish'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/send_message.py ogohlantirish
 
-          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-            -d chat_id="${CHAT_ID}" \
-            -d text="${TEXT}"
+  damolish:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '24 12 * * *' || github.event.inputs.xabar_turi == 'damolish'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/send_message.py damolish
