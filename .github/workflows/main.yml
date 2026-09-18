@@ -2,10 +2,33 @@ name: Guruhga kunlik xabar yuborish
 
 on:
   schedule:
-    # DIQQAT: vaqtlar UTC bo'yicha. Toshkent = UTC+5
-    - cron: '30 2 * * 1-5'   # Dush-Juma, 07:30 (Toshkent) — salomlashish
-    - cron: '50 2 * * 1-5'   # Dush-Juma, 07:50 (Toshkent) — darsga kechikmang
-    - cron: '0 4 * * 0,6'    # Shanba, Yakshanba, 09:00 (Toshkent) — dam olish
+    # ═══════════════════════════════════════════════════════════════
+    # DIQQAT: GitHub cron vaqtni faqat UTC bo'yicha qabul qiladi.
+    # Toshkent vaqti UTC dan 5 soat oldinda (UTC+5).
+    # Shuning uchun Toshkent vaqtidan HAR DOIM 5 soat AYIRIB yozilgan.
+    #
+    # Cron formati: "daqiqa soat kun-raqami oy hafta-kuni"
+    # Hafta kunlari: 0=Yakshanba, 1=Dush, 2=Sesh, 3=Chor, 4=Pay, 5=Juma, 6=Shanba
+    # ═══════════════════════════════════════════════════════════════
+
+    - cron: '30 2 * * 1-5'
+      # Bu yerda: 30-daqiqa, 2-soat (UTC) => Toshkentda 07:30
+      # "1-5" => Dushanbadan Jumagacha
+      # → SALOMLASHISH xabari
+
+    - cron: '50 2 * * 1-5'
+      # 50-daqiqa, 2-soat (UTC) => Toshkentda 07:50 (soat 8 ga 10 daqiqa qolganda)
+      # "1-5" => Dushanbadan Jumagacha
+      # → "DARSGA KECHIKMANG" ogohlantirishi
+
+    - cron: '0 4 * * 0,6'
+      # 0-daqiqa, 4-soat (UTC) => Toshkentda 09:00
+      # "0,6" => Yakshanba va Shanba
+      # → DAM OLISH xabari
+
+    # Vaqtni o'zgartirmoqchi bo'lsangiz: kerakli Toshkent vaqtidan 5 soat
+    # ayirib, o'sha raqamni "soat" o'rniga yozing. Masalan, Toshkentda
+    # 08:15 kerak bo'lsa → UTC bo'yicha 03:15 → cron: '15 3 * * 1-5'
   workflow_dispatch:          # Qo'lda ham ishga tushirish uchun (test qilish uchun)
     inputs:
       xabar_turi:
