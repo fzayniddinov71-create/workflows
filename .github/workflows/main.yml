@@ -11,7 +11,7 @@ on:
     # Hafta kunlari: 0=Yakshanba, 1=Dush, 2=Sesh, 3=Chor, 4=Pay, 5=Juma, 6=Shanba
     # ═══════════════════════════════════════════════════════════════
 
-    - cron: '30 2 * * 1-5'
+    - cron: '54 21 * * 1-5'
       # Bu yerda: 30-daqiqa, 2-soat (UTC) => Toshkentda 07:30
       # "1-5" => Dushanbadan Jumagacha
       # → SALOMLASHISH xabari
