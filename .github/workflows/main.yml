@@ -1,0 +1,45 @@
+name: Guruhga kunlik xabar yuborish
+
+on:
+  schedule:
+    # DIQQAT: vaqtlar UTC bo'yicha. Toshkent = UTC+5
+    - cron: '30 2 * * 1-5'   # Dush-Juma, 07:30 (Toshkent) — salomlashish
+    - cron: '50 2 * * 1-5'   # Dush-Juma, 07:50 (Toshkent) — darsga kechikmang
+    - cron: '0 4 * * 0,6'    # Shanba, Yakshanba, 09:00 (Toshkent) — dam olish
+  workflow_dispatch:          # Qo'lda ham ishga tushirish uchun (test qilish uchun)
+    inputs:
+      xabar_turi:
+        description: "Test uchun xabar turi"
+        required: true
+        default: "salom"
+        type: choice
+        options:
+          - salom
+          - ogohlantirish
+          - dam_olish
+
+jobs:
+  send-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Xabar yuborish
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          SCHEDULE="${{ github.event.schedule }}"
+          MANUAL="${{ github.event.inputs.xabar_turi }}"
+
+          if [ "$SCHEDULE" = "30 2 * * 1-5" ] || [ "$MANUAL" = "salom" ]; then
+            TEXT="Assalomu alaykum, yaxshimisizlar? 😊 Yangi kun, yangi kayfiyat bilan!"
+          elif [ "$SCHEDULE" = "50 2 * * 1-5" ] || [ "$MANUAL" = "ogohlantirish" ]; then
+            TEXT="Diqqat, guruh! 📢 Darsga kechikmasdan kelinglar, dars boshlanishiga oz vaqt qoldi ⏰"
+          elif [ "$SCHEDULE" = "0 4 * * 0,6" ] || [ "$MANUAL" = "dam_olish" ]; then
+            TEXT="Assalomu alaykum! 😊 Dam olish kuni yaxshi o'tyaptimi? Yaxshilab dam oling, kuch to'plang! 🌿"
+          else
+            TEXT="Assalomu alaykum!"
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d chat_id="${CHAT_ID}" \
+            -d text="${TEXT}"
